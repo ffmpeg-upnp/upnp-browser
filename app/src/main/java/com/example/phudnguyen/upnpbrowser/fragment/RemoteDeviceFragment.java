@@ -3,6 +3,7 @@ package com.example.phudnguyen.upnpbrowser.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,7 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.phudnguyen.upnpbrowser.R;
+import com.example.phudnguyen.upnpbrowser.service.UpnpServiceProvider;
 
+import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.registry.Registry;
@@ -27,6 +30,7 @@ public class RemoteDeviceFragment extends Fragment implements RegistryListener {
     private RemoteDeviceViewAdapter mAdapter;
     private ArrayList<RemoteDevice> mRemoteDevices;
     private RecyclerView mRecyclerView;
+    private AndroidUpnpService mUpnpService;
 
     public RemoteDeviceFragment() {
     }
@@ -62,6 +66,10 @@ public class RemoteDeviceFragment extends Fragment implements RegistryListener {
             } else {
                 mRecyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRecyclerView.getContext(),
+                    LinearLayoutManager.VERTICAL);
+            mRecyclerView.addItemDecoration(dividerItemDecoration);
+
             mRemoteDevices = new ArrayList<>();
             mAdapter = new RemoteDeviceViewAdapter(mRemoteDevices, mListener);
             mRecyclerView.setAdapter(mAdapter);
@@ -79,12 +87,26 @@ public class RemoteDeviceFragment extends Fragment implements RegistryListener {
             throw new RuntimeException(context.toString()
                     + " must implement OnListFragmentInteractionListener");
         }
+
+        if (context instanceof UpnpServiceProvider) {
+            mUpnpService = ((UpnpServiceProvider) context).getUpnpService();
+            if (mUpnpService != null) {
+                mUpnpService.get().getRegistry().addListener(this);
+            }
+            for (RemoteDevice rd : mUpnpService.getRegistry().getRemoteDevices()) {
+                this.remoteDeviceAdded(mUpnpService.getRegistry(), rd);
+            }
+
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        if (mUpnpService != null) {
+            mUpnpService.get().getRegistry().removeListener(this);
+        }
     }
 
     @Override

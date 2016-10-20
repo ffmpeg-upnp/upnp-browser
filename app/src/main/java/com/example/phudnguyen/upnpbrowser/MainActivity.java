@@ -17,7 +17,9 @@ import android.widget.Toast;
 
 import com.example.phudnguyen.upnpbrowser.fragment.RemoteDeviceFragment;
 import com.example.phudnguyen.upnpbrowser.service.MyUpnpService;
+import com.example.phudnguyen.upnpbrowser.service.UpnpServiceProvider;
 
+import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.model.meta.Device;
 import org.fourthline.cling.model.meta.LocalDevice;
@@ -25,24 +27,17 @@ import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.registry.DefaultRegistryListener;
 import org.fourthline.cling.registry.Registry;
 
-public class MainActivity extends AppCompatActivity implements RemoteDeviceFragment.OnListFragmentInteractionListener{
+public class MainActivity extends AppCompatActivity implements
+        RemoteDeviceFragment.OnListFragmentInteractionListener,
+        UpnpServiceProvider {
     private static final String TAG = MainActivity.class.getSimpleName();
     private AndroidUpnpService upnpService;
-    private BrowseRegistryListener registryListener = new BrowseRegistryListener();
     private ServiceConnection serviceConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder service) {
             upnpService = (AndroidUpnpService) service;
-
-            upnpService.getRegistry().addListener(registryListener);
             mRemoteDeviceFragment = RemoteDeviceFragment.newInstance(1);
-            upnpService.getRegistry().addListener(mRemoteDeviceFragment);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_holder, mRemoteDeviceFragment).commit();
-
-            for (Device device : upnpService.getRegistry().getDevices()) {
-                registryListener.deviceAdded(device);
-            }
-
             upnpService.getControlPoint().search();
         }
 
@@ -79,11 +74,12 @@ public class MainActivity extends AppCompatActivity implements RemoteDeviceFragm
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (upnpService != null) {
-            upnpService.getRegistry().removeListener(registryListener);
-        }
         // This will stop the UPnP service if nobody else is bound to it
         getApplicationContext().unbindService(serviceConnection);
+    }
+
+    public AndroidUpnpService getUpnpService() {
+        return upnpService;
     }
 
     @Override
@@ -108,55 +104,4 @@ public class MainActivity extends AppCompatActivity implements RemoteDeviceFragm
 
     }
 
-    protected class BrowseRegistryListener extends DefaultRegistryListener {
-
-        @Override
-        public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
-            deviceAdded(device);
-        }
-
-        @Override
-        public void remoteDeviceDiscoveryFailed(Registry registry, final RemoteDevice device, final Exception ex) {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    Toast.makeText(
-                            MainActivity.this,
-                            "Discovery failed of '" + device.getDisplayString() + "': "
-                                    + (ex != null ? ex.toString() : "Couldn't retrieve device/service descriptors"),
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-            });
-            deviceRemoved(device);
-        }
-
-        @Override
-        public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
-            deviceAdded(device);
-        }
-
-        @Override
-        public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
-            deviceRemoved(device);
-        }
-
-        @Override
-        public void localDeviceAdded(Registry registry, LocalDevice device) {
-            deviceAdded(device);
-        }
-
-        @Override
-        public void localDeviceRemoved(Registry registry, LocalDevice device) {
-            deviceRemoved(device);
-        }
-
-        public void deviceAdded(final Device device) {
-            Log.e(TAG, "Device added <<<<<<<< " + device);
-
-        }
-
-        public void deviceRemoved(final Device device) {
-            Log.e(TAG, "Device removed >>>>>>>>" + device);
-        }
-    }
 }
