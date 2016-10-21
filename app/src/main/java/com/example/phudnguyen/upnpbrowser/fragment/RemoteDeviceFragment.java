@@ -7,6 +7,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 public class RemoteDeviceFragment extends Fragment implements RegistryListener {
 
     private static final String ARG_COLUMN_COUNT = "column-count";
+    private static final String TAG = RemoteDeviceFragment.class.getSimpleName();
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
     private RemoteDeviceViewAdapter mAdapter;
@@ -111,12 +113,12 @@ public class RemoteDeviceFragment extends Fragment implements RegistryListener {
 
     @Override
     public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
-
+        Log.e(TAG, "[" + device.getDetails().getFriendlyName() + "] " + "Remote device discovery STARTED!");
     }
 
     @Override
     public void remoteDeviceDiscoveryFailed(Registry registry, RemoteDevice device, Exception ex) {
-
+        Log.e(TAG, "[" + device.getDetails().getFriendlyName() + "] " + "Remote device discovery FAIL!");
     }
 
     @Override
@@ -130,6 +132,7 @@ public class RemoteDeviceFragment extends Fragment implements RegistryListener {
                 mRemoteDevices.add(device);
             }
         }
+        Log.i(TAG, "[" + device.getDetails().getFriendlyName() + "]" + " Service: " + device.getServices().length);
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

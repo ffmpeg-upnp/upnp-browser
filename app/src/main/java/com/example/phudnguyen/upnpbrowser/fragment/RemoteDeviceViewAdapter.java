@@ -37,8 +37,8 @@ public class RemoteDeviceViewAdapter extends RecyclerView.Adapter<RemoteDeviceVi
         holder.mUUID.setText(mValues.get(position).getIdentity().getUdn().getIdentifierString());
         DeviceDetails details = mValues.get(position).getDetails();
         holder.mFriendlyName.setText(details.getFriendlyName());
-        holder.mManufactureDetails.setText("Manufacture: " + details.getManufacturerDetails().getManufacturer());
-        holder.mModelDetails.setText("Model: " + details.getModelDetails().getModelName() + " - " + details.getModelDetails().getModelNumber());
+        holder.mManufactureDetails.setText(details.getManufacturerDetails().getManufacturer());
+        holder.mModelDetails.setText(details.getModelDetails().getModelName() + " - " + details.getModelDetails().getModelNumber());
 
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
